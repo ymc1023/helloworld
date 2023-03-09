@@ -1,21 +1,11 @@
 
-
+#gitlab CI/CD 소스 입니다.
 
 #aws 
 aws configure
 aws sts get-caller-identity
 aws eks describe-cluster --region us-east-1 --name {K8S 클러스터명}
 aws eks update-kubeconfig --region us-east-1 --name {K8S 클러스터명}
-
-
-
-
-
-
-
-
-
-
 
 
 
