@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.deployment.name }}
+  namespace: {{ .Values.deployment.namespace }} 
+spec:
+  replicas: {{ .Values.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.deployment.app }}
+  minReadySeconds: 30
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.deployment.app }}
+    spec:
+      containers:
+      - name: hello-pod
+        image: {{ .Values.deployment.docker_registry }}/{{ .Values.deployment.docker_registry_name }}:{{ .Values.deployment.capp }}-{{ .Values.deployment.imageID }}
+        ports:
+        - containerPort: {{ .Values.deployment.cport }}
+      imagePullSecrets:
+      - name: gitlab-credentials #gitlab-token-pub

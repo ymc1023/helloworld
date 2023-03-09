@@ -1,0 +1,13 @@
+#코드 ,설정에 포함된 보안키,암호 api 토큰을 검색하여, git 레포지트리로 공유되는 것을 방지 
+include:
+  - template: Security/Secret-Detection.gitlab-ci.yml
+
+secret_detection:
+  variables:
+    SECRET_DETECTION_HISTORIC_SCAN: "true"
+
+variables:
+  SAST_EXCLUDE_ANALYZERS: ""
+  SAST_EXCLUDE_PATHS: "spec,test,tests,tmp"
+  SCAN_KUBERNETES_MANIFESTS: "false"
+  SECRETS_ANALYZER_VERSION: "4.5"

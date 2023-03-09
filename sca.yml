@@ -1,0 +1,7 @@
+#코드 의존성을 갖는 라이브러리 /패키지 취약점 검사 
+include:
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+
+variables:
+  DS_EXCLUDED_ANALYZERS: ""
+  DS_EXCLUDED_PATHS: "spec,test,tests,tmp"

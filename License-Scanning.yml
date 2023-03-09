@@ -1,0 +1,4 @@
+# 수용가능한 오픈소스 라이센스 검토
+include:
+# - template: Security/License-Management.gitlab-ci.yml
+ - template: Security/License-Scanning.gitlab-ci.yml

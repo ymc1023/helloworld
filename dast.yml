@@ -1,0 +1,10 @@
+#런타임 환경에서 구동되는 웹 어플리케이션에 대한 보안 취약점 검사
+stages:
+  - dast
+
+include:
+  - template: DAST.gitlab-ci.yml
+
+variables:
+  DAST_FULL_SCAN_ENABLED: "true"
+  DAST_WEBSITE: 'http://http://3.83.117.135:8200' #검사 대상 url 

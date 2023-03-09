@@ -1,0 +1,101 @@
+#ecr
+variables:
+  DOCKER_REGISTRY: public.ecr.aws/q2e9x0n5 #585180838533.dkr.ecr.us-east-1.amazonaws.com/gitlabrepo #public.ecr.aws/q2e9x0n5/gitlabrepo
+  AWS_DEFAULT_REGION: us-east-1
+  DOCKER_REGISTRY_NAME: gitlabrepo
+  APP_NAME: helloworld
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+# EKS_CONTEXT_PATH: [조직]/[그룹]/[프로젝트명]:[agnet명]
+  EKS_CONTEXT_PATH: ubuntu_devgrp/helloworld:mz-agent 
+  EKS_DEFAULT_NAMESPACE: gitlab-agent
+  EKS_CLUSTER_NAME: TFEksGitCICD-cluster
+  EKS_USER: agent:13
+  EKS_SERVER: https://81D22A0190EBD3267D1DFE954D8620A4.gr7.us-east-1.eks.amazonaws.com
+
+cache:
+  paths: 
+    - .m2/repository
+
+stages:
+  - package
+  - build
+  - deploy
+  - release
+
+package:
+  image: maven:3.8.6-jdk-11
+  stage: package
+  script:
+    - 'mvn -B package --file pom.xml'
+  artifacts:
+    paths:
+      - target/*.jar
+  only:
+    variables:
+      - $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      
+
+docker_build:
+  image: docker:19.03.12
+  stage: build
+  services:
+    - docker:19-dind
+  before_script:
+    - cat /etc/resolv.conf
+    - cat /etc/hosts
+    - apk add --no-cache curl jq python3 py3-pip
+    - pip install awscli
+    - aws --version
+    - docker info
+    - docker --version
+    - echo $DOCKER_REGISTRY
+    #aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/q2e9x0n5
+    - aws ecr-public get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $DOCKER_REGISTRY
+
+    
+  
+  script:
+    
+    # $DOCKER_REGISTRY/$DOCKER_REGISTRY_NAME 폴더에 이미지($APP_NAME-$CI_PIPELINE_IID)를 저장한다.
+    - docker build -t $DOCKER_REGISTRY_NAME:$APP_NAME-$CI_PIPELINE_IID  .
+    - docker tag $DOCKER_REGISTRY_NAME:$APP_NAME-$CI_PIPELINE_IID $DOCKER_REGISTRY/$DOCKER_REGISTRY_NAME:$APP_NAME-$CI_PIPELINE_IID
+    - docker push $DOCKER_REGISTRY/$DOCKER_REGISTRY_NAME:$APP_NAME-$CI_PIPELINE_IID
+   
+  only:
+    variables:
+      - $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+#helm-deploy:
+#  stage: deploy
+#  image: alpine/helm:3.8.2
+#  script:
+#    - helm upgrade $APP_NAME ./charts --install --values=./charts/values.yaml --namespace $EKS_DEFAULT_NAMESPACE
+#  rules:
+#    - if: $CI_COMMIT_BRANCH == 'main'
+#      when: always
+
+
+eks-deploy:
+  image:
+    name: dtzar/helm-kubectl:3.8.2 # gitlabcicd/kubectl:latest
+    entrypoint: ['']
+  stage: deploy
+
+  before_script:
+  # 해당 에러 발생시  couldn't get current server API group list: the server has asked for the client to provide credentials  아래 설정
+    - kubectl config set-cluster $EKS_CLUSTER_NAME --server="${EKS_SERVER}"
+    - kubectl config set clusters.$EKS_CLUSTER_NAME.certificate-authority-data ${CERTIFICATE_AUTHORITY_DATA} #이 값은 eks 의 Certificate authority  값
+    - kubectl config set-credentials $EKS_USER --token="${USER_TOKEN}"  #eks 의 service-account-token 값  
+    - kubectl config set-context $EKS_CONTEXT_PATH --cluster=$EKS_CLUSTER_NAME --user=$EKS_USER
+    
+  
+  script:
+    - kubectl config get-contexts
+    - kubectl config use-context $EKS_CONTEXT_PATH
+    #- kubectl delete service helloworld-svc -n gitlab-agent
+    #- kubectl delete -f deployment.yaml 
+    #- helm version
+    - helm upgrade $APP_NAME ./helloworld-helm --install --values=./helloworld-helm/values.yaml --namespace $EKS_DEFAULT_NAMESPACE --set deployment.imageID=$CI_PIPELINE_IID
+    

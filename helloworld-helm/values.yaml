@@ -1,0 +1,19 @@
+deployment:
+   name: helloworld-deploy
+   namespace: gitlab-agent
+   app: helloworld
+   capp: helloworld
+   cport: 8200
+   replicas: 2
+   imageID: 244
+   docker_registry: public.ecr.aws/q2e9x0n5
+   docker_registry_name: gitlabrepo
+  
+service:
+  type: NodePort
+  ports:
+      port: 8200
+      targetPort: 8200
+
+#ingress:
+#  host: gitlab.mtcom.ai

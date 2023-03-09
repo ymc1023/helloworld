@@ -1,0 +1,9 @@
+#코드내 포함된 취약점 분석
+include:
+  - template: Security/SAST.gitlab-ci.yml
+
+
+variables:
+  SAST_EXCLUDE_ANALYZERS: ""
+  SAST_EXCLUDE_PATHS: "spec,test,tests,tmp"
+  SCAN_KUBERNETES_MANIFESTS: "false"
