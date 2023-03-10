@@ -1,12 +1,31 @@
 
 #gitlab CI/CD 소스 입니다.
 
+
 #aws 
+
+sudo apt update
+sudo apt install awscli
 aws configure
 aws sts get-caller-identity
 aws eks describe-cluster --region us-east-1 --name {K8S 클러스터명}
 aws eks update-kubeconfig --region us-east-1 --name {K8S 클러스터명}
 
+#helm 특정 버전 다운로드하여 변경
+cd helm/
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+curl -L https://git.io/get_helm.sh | bash -s -- --version v3.8.2
+
+chmod 700 get_helm.sh
+./get_helm.sh 
+
+
+#kubectl 특정 버전 다운로드
+
+curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.23.6/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+kubectl get po -A
 
 
 #alb를 생성하기 위한 절차
