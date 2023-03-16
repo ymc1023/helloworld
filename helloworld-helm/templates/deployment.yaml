@@ -9,10 +9,12 @@ spec:
     matchLabels:
       app: {{ .Values.deployment.app }}
   minReadySeconds: 30
+  # 무중단 배포로 RollingUpdate 방식 사용
+  # 업데이트 시 1개씩 업데이트하도록 설정
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxUnavailable: 0
+      maxUnavailable: 1
       maxSurge: 1
   template:
     metadata:
